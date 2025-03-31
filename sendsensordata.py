@@ -1,21 +1,28 @@
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from decimal import Decimal
 
-# Connect to DynamoDB
-dynamodb = boto3.resource('dynamodb', region_name='us-east-2')  # Change region if needed
+dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
 table = dynamodb.Table('SensorData')
 
-# Simulate sensor data
-def send_data(sensor_id, value):
+def send_data(temp, front, back, garage, window):
     response = table.put_item(
         Item={
-            'sensor_id': sensor_id,
-            'timestamp': datetime.now().isoformat(),
-            'value': Decimal(str(value))  # ✅ Wrap float in Decimal
+            'sensor_id': 'home_node_1',
+            'timestamp': datetime.now(timezone.utc).isoformat(),
+            'temp': Decimal(str(temp)),
+            'reed_front': front,
+            'reed_back': back,
+            'reed_garage': garage,
+            'reed_window': window
         }
     )
     print("Data sent:", response)
 
-# Example usage
-send_data('temp_sensor_1', 23.7)
+# Simulated reading
+send_data(61.5, 'open', 'closed', 'open', 'closed')
+
+
+
+
+
