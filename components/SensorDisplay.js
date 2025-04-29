@@ -1,5 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { SafeAreaView, Text, StyleSheet, View, ActivityIndicator, ScrollView } from 'react-native';
+import {
+  SafeAreaView,
+  Text,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  ScrollView,
+  TouchableOpacity,
+  Alert
+} from 'react-native';
 import axios from 'axios';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
@@ -18,9 +27,21 @@ export default function SensorDisplay() {
     }
   };
 
+  const sendControlSignal = async () => {
+    try {
+      await axios.post('https://xqf3b19ksf.execute-api.us-east-2.amazonaws.com/control', {
+        command: 'unlock',
+      });
+      Alert.alert('Success', 'Control signal sent to device!');
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to send signal to ESP.');
+    }
+  };
+
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 10000);
+    const interval = setInterval(fetchData, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -44,13 +65,12 @@ export default function SensorDisplay() {
 
   const renderReedCard = (label, value, iconName) => {
     let icon = iconName;
-  
     if (iconName === 'garage') {
-      icon = 'garage'; // fallback icon for garage
+      icon = 'garage';
     } else {
       icon = value === 'closed' ? `${iconName}-closed` : `${iconName}-open`;
     }
-  
+
     return (
       <View style={styles.gridItem}>
         <MaterialCommunityIcons
@@ -89,7 +109,13 @@ export default function SensorDisplay() {
             {renderReedCard('Window', sensorData.reed_window, 'window')}
           </View>
 
-          <Text style={styles.timestamp}>Last updated: {formatTimestamp(sensorData.timestamp)}</Text>
+          <TouchableOpacity style={styles.controlButton} onPress={sendControlSignal}>
+            <Text style={styles.buttonText}>Open Garage Door</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.timestamp}>
+            Last updated: {formatTimestamp(sensorData.timestamp)}
+          </Text>
         </ScrollView>
       ) : (
         <Text style={styles.label}>No sensor data available.</Text>
@@ -169,5 +195,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
+  },
+  controlButton: {
+    backgroundColor: '#007AFF',
+    padding: 16,
+    marginTop: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
